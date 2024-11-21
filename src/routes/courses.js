@@ -1,27 +1,51 @@
-const express = require('express');
-const { createCourse, getAllCourses, getCourseById, updateCourse, deleteCourse, addDocuments} = require('../controllers/courseController');
+const express = require("express");
+const {
+  createCourse,
+  getAllCourses,
+  getCourseById,
+  updateCourse,
+  deleteCourse,
+  addDocuments,
+} = require("../controllers/courseController");
 const courseRouter = express.Router();
-const {uploadImage, uploadDocument} = require('../middleware/uploads');
+const { uploadImage, uploadDocument } = require("../middleware/uploads");
+const authentication = require("../middleware/authentication");
+const authorizer = require("../middleware/authorization");
 
+// tạo khóa học
+courseRouter.post(
+  "/create",
+  authentication,
+  authorizer(["admin"]),
+  uploadImage.single("image"),
+  createCourse
+);
+//xem danh sách khóa học
+courseRouter.get("/all", getAllCourses);
+//xem chi tiết khóa học
+courseRouter.get("/:id", getCourseById);
+//cập nhật thông tin khóa học
+courseRouter.put(
+  "/:id",
+  authentication,
+  authorizer(["admin"]),
+  uploadImage.single("image"),
+  updateCourse
+);
+//xóa khóa học
+courseRouter.delete(
+  "/:id",
+  authentication,
+  authorizer(["admin"]),
+  deleteCourse
+);
+//thêm tài liệu vào khóa học
+courseRouter.post(
+  "/documents/:courseId",
+  authentication,
+  authorizer(["lecturer"]),
+  uploadDocument.array("documents"),
+  addDocuments
+);
 
-// console.log('uploadImage:', uploadImage);
-// console.log('uploadDocument:', uploadDocument);
-
-courseRouter.post("/create", uploadImage.single('image'), createCourse)
-courseRouter.get("/all", getAllCourses)
-courseRouter.get("/:id", getCourseById)
-courseRouter.put("/:id", uploadImage.single('image'), updateCourse)
-courseRouter.delete("/:id", deleteCourse)
-courseRouter.post("/documents/:courseId", uploadDocument.array('documents'), addDocuments)
-
-
-courseRouter.post('/test-upload-image', uploadImage.single('image'), (req, res) => {
-    res.send('Upload ảnh thành công');
-});
-
-// Test route cho upload tài liệu
-courseRouter.post('/:courseId/test-upload-documents', uploadDocument.array('documents'), (req, res) => {
-    res.send('Upload tài liệu thành công');
-});
-
-module.exports = courseRouter ;
+module.exports = courseRouter;

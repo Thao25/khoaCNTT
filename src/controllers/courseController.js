@@ -10,21 +10,21 @@ const createCourse = async(req, res) => {
    if (!name || !description || !level ) {
     return res.status(400).json({ message: 'Thiếu các trường bắt buộc' });
 }
-const imagePath = req.file ? req.file.path.replace(/\\/g, '/') : null; // Chuyển dấu \ thành /  
+const imagePath = req.file ? req.file.path.replace(/\\/g, '/') : null; 
 
    const course = await courseService.createCourse(name, description, imagePath, level);
 
    const fullImageUrl = imagePath ? `${req.protocol}://${req.get('host')}/${imagePath}` : null;
 
    res.status(201).json({ 
-        message: 'Course created successfully',
+        message: 'Tạo khóa học thành công',
         data: { ...course.toObject(), 
         image: fullImageUrl,
     } });
 
    } catch (error) {
     console.log(error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Lỗi trong quá trình tạo khóa học' });
    }
 };
 
@@ -36,7 +36,7 @@ const getAllCourses = async (req, res) => {
     return{ ...course.toObject(), image: fullImageUrl, documents: fullDocumentUrls };
     });
    
-    res.status(200).json({ message: 'List of courses', data: coursesWithUrls });
+    res.status(200).json({ message: 'Danh sách khóa học', data: coursesWithUrls });
 };
 
 const getCourseById = async (req, res) => {
@@ -45,22 +45,22 @@ const getCourseById = async (req, res) => {
     if (course) {
         const  fullImageUrl = course.image ? `${req.protocol}://${req.get('host')}/${course.image}` : null;
         const fullDocumentUrls = course.documents ? course.documents.map(doc => `${req.protocol}://${req.get('host')}/uploads/courses/documents/${doc}`) : [];
-        res.status(200).json({ message: 'Course details',
+        res.status(200).json({ message: 'Chi tiết khóa học',
              data: { ...course.toObject(), image: fullImageUrl, documents: fullDocumentUrls }  });
     } else {
-        res.status(404).json({ message: 'Course not found' });
+        res.status(404).json({ message: 'Không tìm thấy khóa học' });
     }
 };
 
 const updateCourse = async (req, res) => {
     const id = req.params.id;
- const imagePath = req.file ? req.file.path.replace(/\\/g, '/') : null; // Chuyển dấu \ thành /
+ const imagePath = req.file ? req.file.path.replace(/\\/g, '/') : null; 
     const { name, description, level} = req.body;
     console.log('req.body', req.body);     
    const course = await Course.findById(id);
 
    if (!course) {
-    return res.status(404).json({ message: 'Course not found' });
+    return res.status(404).json({ message: 'Không tìm thấy khóa học' });
 }
 const updatedImagePath = imagePath ? imagePath : course.image;
 
@@ -68,11 +68,9 @@ const updatedImagePath = imagePath ? imagePath : course.image;
    console.log(updatedCourse);
    const fullImageUrl = imagePath ? `${req.protocol}://${req.get('host')}/${imagePath}` : course.image;
    if ( !updatedCourse) {
-        return res.status(404).json({ message: 'Course not found' });
-    }
-
-        
-        res.status(200).json({ message: 'Course updated successfully', data: { ...updatedCourse.toObject(), image: fullImageUrl } });
+        return res.status(404).json({ message: 'Không tìm thấy khóa học' });
+    }        
+    res.status(200).json({ message: 'Cập nhật khóa học thành công', data: { ...updatedCourse.toObject(), image: fullImageUrl } });
     
 };
 
@@ -83,16 +81,16 @@ const deleteCourse = async (req, res) => {
         const deletedCourse = await courseService.deleteCourse(id);
        
         if (deletedCourse) {
-        res.status(200).json({ message: 'Course deleted successfully' });
+        res.status(200).json({ message: 'Xóa khóa học thành công' });
         } else {
-            res.status(404).json({ message: 'Course not found' });
+            res.status(404).json({ message: 'Không tìm thấy khóa học' });
         }
     };
 
     const addDocuments = async (req, res) => {
         try {
-            const { courseId } = req.params; // Lấy ID khóa học từ route
-            const documents = req.files.map(file => file.filename); // Lấy tên file từ `multer`
+            const { courseId } = req.params;
+            const documents = req.files.map(file => file.filename); 
     
             // Gọi service để thêm tài liệu vào khóa học
             const updatedCourse = await courseService.addDocumentsToCourse(courseId, documents);
@@ -107,16 +105,16 @@ const deleteCourse = async (req, res) => {
     
             // Trả về thông tin khóa học đã cập nhật với link ảnh và tài liệu đầy đủ
             res.status(200).json({
-                message: 'Documents added successfully',
+                message: 'Thêm tài liệu vào khóa học thành công',
                 course: {
-                    ...updatedCourse._doc, // Truyền tất cả dữ liệu khóa học
-                    image: fullImageUrl, // Gắn URL đầy đủ cho ảnh
-                    documents: documentUrls, // Gắn URL đầy đủ cho tài liệu
+                    ...updatedCourse._doc, 
+                    image: fullImageUrl, 
+                    documents: documentUrls, 
                 },
             });
         } catch (error) {
             console.log(error);
-            res.status(500).json({ message: 'Internal server error' });
+            res.status(500).json({ message: 'Lỗi trong quá trình thêm tài liệu vào khóa học' });
         }
     };
     
