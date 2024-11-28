@@ -4,7 +4,9 @@ const {
   handleLogin,
   getAllUser,
   getAccount,
-  updateUserByAdmin,
+  updateUser,
+  changePassword,
+  deleteUser,
 } = require("../controllers/userController");
 const authentication = require("../middleware/authentication");
 const authorizer = require("../middleware/authorization");
@@ -30,14 +32,25 @@ userRouter.get(
   getAllUser
 );
 //xem chi tiết người dùng(phải đăng nhập mới xem được)
-userRouter.get("/:id", authentication, getAccount);
+userRouter.get("/:email", authentication, getAccount);
 //cập nhật thông tin người dùng quyền admin
 userRouter.put(
   "/admin/:id",
   authentication,
   authorizer(["admin"]),
   uploadProfileImage.single("profileImage"),
-  updateUserByAdmin
+  updateUser
 );
+//cập nhật thông tin cá nhân
+userRouter.put(
+  "/:id",
+  authentication,
+  uploadProfileImage.single("profileImage"),
+  updateUser
+);
+// Đổi mật khẩu
+userRouter.post("/password", authentication, changePassword);
+// xóa người dùng
+userRouter.delete("/:id", authentication, authorizer(["admin"]), deleteUser);
 
 module.exports = userRouter;

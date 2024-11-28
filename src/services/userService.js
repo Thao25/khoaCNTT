@@ -3,7 +3,10 @@ require("dotenv").config();
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const e = require("express");
 const saltRounds = 10;
+const fs = require("fs");
+const path = require("path");
 const createUserService = async (
   email,
   password,
@@ -88,8 +91,9 @@ const loginService = async (email, password) => {
         });
 
         return {
+          EC: 0,
+          EM: "OK",
           access_token,
-
           user: {
             email: user.email,
             role: user.role,
@@ -125,9 +129,13 @@ const getUserService = async () => {
     return null;
   }
 };
-const getAccountService = async (id) => {
+const getAccountService = async (email) => {
   try {
-    let result = await User.findById(id);
+    const result = await User.findOne({ email });
+    // if (!result) {
+    //   return null;
+    // }
+    console.log("result", result);
     return result;
   } catch (error) {
     console.log(error);
@@ -135,7 +143,7 @@ const getAccountService = async (id) => {
   }
 };
 
-const updateUserByAdminService = async (id, userData) => {
+const updateUserService = async (id, userData) => {
   try {
     // Cập nhật thông tin người dùng, không thay đổi mật khẩu
     const result = await User.findByIdAndUpdate(id, userData, { new: true });
@@ -149,10 +157,85 @@ const updateUserByAdminService = async (id, userData) => {
   }
 };
 
+const changePasswordService = async (email, oldPassword, newPassword) => {
+  try {
+    // Kiểm tra xem mật khẩu cũ và mật khẩu mới có hợp lệ không
+    if (!oldPassword || !newPassword) {
+      return {
+        EC: 1,
+        EM: "Cần phải cung cấp cả mật khẩu cũ và mật khẩu mới.",
+      };
+    }
+
+    // Tìm người dùng từ cơ sở dữ liệu
+    const user = await User.findOne({ email });
+    if (!user) {
+      return {
+        EC: 2,
+        EM: "Người dùng không tìm thấy.",
+      };
+    }
+
+    // So sánh mật khẩu cũ với mật khẩu trong cơ sở dữ liệu
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return {
+        EC: 3,
+        EM: "Mật khẩu cũ không đúng.",
+      };
+    }
+
+    // Mã hóa mật khẩu mới
+    const salt = await bcrypt.genSalt(10);
+    const hashedNewPassword = await bcrypt.hash(newPassword, salt);
+
+    // Cập nhật mật khẩu mới vào cơ sở dữ liệu
+    user.password = hashedNewPassword;
+    await user.save();
+
+    return {
+      EC: 0,
+      EM: "Đổi mật khẩu thành công.",
+    };
+  } catch (error) {
+    console.error("Error changing password in service:", error);
+    return {
+      EC: 4,
+      EM: "Đã có lỗi xảy ra trong quá trình đổi mật khẩu.",
+    };
+  }
+};
+
+const deleteUserService = async (id) => {
+  try {
+    const result = await User.findByIdAndDelete(id);
+    if (!result) {
+      return null;
+    }
+    // xóa ảnh đại diện nếu có
+    if (result.profileImage) {
+      const imagePath = path.resolve(__dirname, "../../", result.profileImage);
+      console.log("imagePath", imagePath);
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+        console.log("Image deleted:", imagePath);
+      } else {
+        console.log("Image not found:", imagePath);
+      }
+    }
+    return result;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+};
+
 module.exports = {
   createUserService,
   loginService,
   getUserService,
   getAccountService,
-  updateUserByAdminService,
+  updateUserService,
+  changePasswordService,
+  deleteUserService,
 };

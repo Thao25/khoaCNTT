@@ -3,7 +3,9 @@ const {
   loginService,
   getUserService,
   getAccountService,
-  updateUserByAdminService,
+  updateUserService,
+  changePasswordService,
+  deleteUserService,
 } = require("../services/userService");
 const User = require("../models/user");
 const createUser = async (req, res) => {
@@ -51,24 +53,28 @@ const createUser = async (req, res) => {
     return res
       .status(500)
       .json({ message: "Lỗi trong quá trình tạo người dùng" });
-  return res
-    .status(200)
-    .json({
-      message: "Tạo người dùng thành công",
-      data: { ...data.toObject(), profileImage: fullImageUrl },
-    });
+  return res.status(200).json({
+    message: "Tạo người dùng thành công",
+    data: { ...data.toObject(), profileImage: fullImageUrl },
+  });
 };
 const handleLogin = async (req, res) => {
   const { email, password } = req.body;
   const data = await loginService(email, password);
-  return res.status(200).json(data);
+  if (data.EC !== 0) {
+    return res.status(400).json({ message: data.EM });
+  }
+  return res.status(200).json({
+    message: "Đăng nhập thành công",
+    data,
+  });
 };
 const getAllUser = async (req, res) => {
   const data = await getUserService();
   const dataWithUrl = data.map((user) => {
     const fullImageUrl = user.profileImage
       ? `${req.protocol}://${req.get("host")}/${user.profileImage}`
-      : null;
+      : "https://th.bing.com/th?id=OIP.xyVi_Y3F3YwEIKzQm_j_jQHaHa&w=250&h=250&c=8&rs=1&qlt=90&o=6&dpr=1.5&pid=3.1&rm=2";
     return { ...user.toObject(), profileImage: fullImageUrl };
   });
 
@@ -77,20 +83,20 @@ const getAllUser = async (req, res) => {
     .json({ message: "Danh sách người dùng", data: dataWithUrl });
 };
 const getAccount = async (req, res) => {
-  const id = req.params.id;
-  const data = await getAccountService(id);
+  const email = req.params.email;
+  const data = await getAccountService(email);
+  if (!data)
+    return res.status(404).json({ message: "Không tìm thấy người dùng" });
   const fullImageUrl = data.profileImage
     ? `${req.protocol}://${req.get("host")}/${data.profileImage}`
-    : null;
-  return res
-    .status(200)
-    .json({
-      message: "Thông tin người dùng",
-      data: { ...data.toObject(), profileImage: fullImageUrl },
-    });
+    : "https://th.bing.com/th?id=OIP.xyVi_Y3F3YwEIKzQm_j_jQHaHa&w=250&h=250&c=8&rs=1&qlt=90&o=6&dpr=1.5&pid=3.1&rm=2";
+  return res.status(200).json({
+    message: "Thông tin người dùng",
+    data: { ...data.toObject(), profileImage: fullImageUrl },
+  });
 };
 
-const updateUserByAdmin = async (req, res) => {
+const updateUser = async (req, res) => {
   const id = req.params.id;
   const {
     email,
@@ -118,7 +124,7 @@ const updateUserByAdmin = async (req, res) => {
     const updatedImagePath = imagePath ? imagePath : User.profileImage;
 
     // Cập nhật thông tin người dùng
-    const updatedUser = await updateUserByAdminService(id, {
+    const updatedUser = await updateUserService(id, {
       email,
       fullName,
       profileImage: updatedImagePath,
@@ -156,10 +162,43 @@ const updateUserByAdmin = async (req, res) => {
   }
 };
 
+const changePassword = async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  const email = req.user.email; // Lấy userId từ thông tin người dùng đã được xác thực (từ JWT)
+  try {
+    // Gọi service để xử lý logic đổi mật khẩu
+    const result = await changePasswordService(email, oldPassword, newPassword);
+
+    // Trả về kết quả từ service
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error in controller:", error);
+    return res.status(500).json({
+      EC: 4,
+      EM: "Đã có lỗi xảy ra trong quá trình xử lý yêu cầu.",
+    });
+  }
+};
+const deleteUser = async (req, res) => {
+  const id = req.params.id;
+  try {
+    const deletedUser = await deleteUserService(id);
+    return res.status(200).json({ message: "Xóa người dùng thành công" });
+  } catch (error) {
+    console.error("Error in controller:", error);
+    return res.status(500).json({
+      EC: 4,
+      EM: "Đã có lỗi xảy ra trong quá trình xử lý yêu cầu.",
+    });
+  }
+};
+
 module.exports = {
   createUser,
   handleLogin,
   getAllUser,
   getAccount,
-  updateUserByAdmin,
+  updateUser,
+  changePassword,
+  deleteUser,
 };

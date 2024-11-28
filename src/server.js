@@ -4,7 +4,6 @@ const configViewEngine = require("./config/viewEngine");
 const userRouter = require("./routes/users");
 const courseRouter = require("./routes/courses");
 const connection = require("./config/database");
-const { getHomepage } = require("./controllers/homeController");
 const cors = require("cors");
 const path = require("path");
 const authentication = require("./middleware/authentication");
