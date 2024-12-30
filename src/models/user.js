@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema({
     enum: ["student", "lecturer", "admin"],
   },
   profileImage: { type: String },
-  gender: { type: String, enum: ["male", "female"] },
+  gender: { type: String, enum: ["Nam", "Nữ"] },
   address: { type: String },
   phoneNumber: { type: String },
   dateOfBirth: Date,
@@ -20,6 +20,14 @@ const userSchema = new mongoose.Schema({
     required: function () {
       return this.role === "student"; // Chỉ yêu cầu nếu là sinh viên
     },
+  },
+  MSV: {
+    type: String,
+    unique: true,
+    required: function () {
+      return this.role === "student"; // Chỉ yêu cầu nếu là sinh viên
+    },
+    match: [/^CT\d{6}$/, "MSV phải bắt đầu bằng 'CT' theo sau là 6 chữ số"], // regex kiểm tra định dạng
   },
 
   description: {

@@ -1,0 +1,34 @@
+{
+  "kind": "collectionType",
+  "collectionName": "submenus",
+  "info": {
+    "name": "Submenu",
+    "description": ""
+  },
+  "options": {
+    "increments": true,
+    "timestamps": true,
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "subMenu": {
+      "type": "string",
+      "required": true
+    },
+    "subMenuSlug": {
+      "type": "string",
+      "required": true
+    },
+    "articles": {
+      "via": "submenus",
+      "collection": "articles",
+      "dominant": true
+    },
+    "menus": {
+      "via": "submenus",
+      "collection": "menu",
+      "dominant": true
+    }
+  }
+}

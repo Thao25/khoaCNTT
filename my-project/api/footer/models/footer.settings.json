@@ -1,0 +1,48 @@
+{
+  "kind": "collectionType",
+  "collectionName": "footers",
+  "info": {
+    "name": "footer",
+    "description": ""
+  },
+  "options": {
+    "increments": true,
+    "timestamps": true,
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "email": {
+      "type": "email",
+      "required": true
+    },
+    "address": {
+      "type": "string",
+      "required": true
+    },
+    "about_url": {
+      "type": "string",
+      "required": true
+    },
+    "program_url": {
+      "type": "string",
+      "required": true
+    },
+    "facebook": {
+      "type": "string",
+      "required": true
+    },
+    "website": {
+      "type": "string",
+      "required": true
+    },
+    "video_link": {
+      "type": "string",
+      "required": true
+    },
+    "phone": {
+      "type": "string",
+      "required": true
+    }
+  }
+}

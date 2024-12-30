@@ -20,11 +20,9 @@ const createUser = async (req, res) => {
     dateOfBirth,
     studentClass,
     description,
+    MSV,
   } = req.body;
 
-  if (!email || !password || !role || !fullName) {
-    return res.status(400).json({ message: "Thiếu các trường bắt buộc" });
-  }
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     return res
@@ -44,7 +42,8 @@ const createUser = async (req, res) => {
     phoneNumber,
     dateOfBirth,
     studentClass,
-    description
+    description,
+    MSV
   );
   const fullImageUrl = imagePath
     ? `${req.protocol}://${req.get("host")}/${imagePath}`
@@ -60,10 +59,16 @@ const createUser = async (req, res) => {
 };
 const handleLogin = async (req, res) => {
   const { email, password } = req.body;
+
   const data = await loginService(email, password);
   if (data.EC !== 0) {
-    return res.status(400).json({ message: data.EM });
+    return res.status(400).json({
+      message: data.EM,
+      EC: data.EC,
+      EM: data.EM,
+    });
   }
+
   return res.status(200).json({
     message: "Đăng nhập thành công",
     data,
@@ -83,7 +88,7 @@ const getAllUser = async (req, res) => {
     .json({ message: "Danh sách người dùng", data: dataWithUrl });
 };
 const getAccount = async (req, res) => {
-  const email = req.params.email;
+  const email = req.user.email;
   const data = await getAccountService(email);
   if (!data)
     return res.status(404).json({ message: "Không tìm thấy người dùng" });
@@ -104,9 +109,11 @@ const updateUser = async (req, res) => {
     address,
     phoneNumber,
     gender,
+    role,
     dateOfBirth,
     studentClass,
     description,
+    MSV,
   } = req.body;
 
   // Kiểm tra xem có file ảnh không, nếu không thì giữ lại ảnh cũ
@@ -131,9 +138,11 @@ const updateUser = async (req, res) => {
       address,
       phoneNumber,
       gender,
+      role,
       dateOfBirth,
       studentClass,
       description,
+      MSV,
     });
 
     // Tạo URL đầy đủ cho ảnh
@@ -183,12 +192,44 @@ const deleteUser = async (req, res) => {
   const id = req.params.id;
   try {
     const deletedUser = await deleteUserService(id);
-    return res.status(200).json({ message: "Xóa người dùng thành công" });
+    return res.status(200).json({
+      success: true,
+      message: "Xóa người dùng thành công",
+    });
   } catch (error) {
     console.error("Error in controller:", error);
     return res.status(500).json({
       EC: 4,
       EM: "Đã có lỗi xảy ra trong quá trình xử lý yêu cầu.",
+    });
+  }
+};
+
+//cập nhật trạng thái người dùng
+const updateUserStatus = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const isActive = req.body.isActive;
+    if (typeof isActive !== "boolean") {
+      console.log("st", isActive);
+      return res
+        .status(400)
+        .json({ message: "Trạng thái isActive phải là boolean" });
+    }
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      { isActive },
+      { new: true }
+    );
+    if (!updatedUser) {
+      return res.status(404).json({ message: "Không tìm thấy người dùng" });
+    }
+    return res.status(200).json({ message: "ok" });
+  } catch (error) {
+    console.error("Error in controller:", error);
+    return res.status(500).json({
+      EC: 4,
+      EM: "Đã có lỗi xảy ra trong quá trình xử lý yêu cầu.",
     });
   }
 };
@@ -201,4 +242,5 @@ module.exports = {
   updateUser,
   changePassword,
   deleteUser,
+  updateUserStatus,
 };

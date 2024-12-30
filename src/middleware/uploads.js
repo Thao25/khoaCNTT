@@ -34,7 +34,8 @@ const uploadDocument = multer({
     },
     filename: function (req, file, cb) {
       const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-      cb(null, uniqueSuffix + "-" + file.originalname);
+      const decodedFileName = decodeURIComponent(file.originalname);
+      cb(null, uniqueSuffix + "-" + decodedFileName);
     },
   }),
   limits: { fileSize: 20 * 1024 * 1024 }, // Giới hạn kích thước file tài liệu: 20MB

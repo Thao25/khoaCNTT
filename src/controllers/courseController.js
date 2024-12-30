@@ -4,8 +4,6 @@ const Course = require("../models/course");
 const createCourse = async (req, res) => {
   try {
     const { name, description, level } = req.body;
-    console.log(req.body);
-    console.log(req.file);
     // Kiểm tra các trường bắt buộc
     if (!name || !description || !level) {
       return res.status(400).json({ message: "Thiếu các trường bắt buộc" });
@@ -38,7 +36,7 @@ const getAllCourses = async (req, res) => {
   const coursesWithUrls = courses.map((course) => {
     const fullImageUrl = course.image
       ? `${req.protocol}://${req.get("host")}/${course.image}`
-      : "https://th.bing.com/th/id/R.89be2ca2b6b14e6589096ef6161f1e65?rik=FJCHaoQbbZth5w&riu=http%3a%2f%2fkarlmueller-asia.com%2fstatic%2fmedia%2flogo.89be2ca2.png&ehk=15Jii4VxOGT82UWsNZKAfEKkyzlZMJwai13deRKzcFM%3d&risl=&pid=ImgRaw&r=0";
+      : "http://localhost:8080/uploads/courses/images/1733382611231-882417740-thu%20vien.jpg";
     const fullDocumentUrls = course.documents
       ? course.documents.map(
           (doc) =>
@@ -65,7 +63,7 @@ const getCourseById = async (req, res) => {
   if (course) {
     const fullImageUrl = course.image
       ? `${req.protocol}://${req.get("host")}/${course.image}`
-      : "https://th.bing.com/th/id/R.89be2ca2b6b14e6589096ef6161f1e65?rik=FJCHaoQbbZth5w&riu=http%3a%2f%2fkarlmueller-asia.com%2fstatic%2fmedia%2flogo.89be2ca2.png&ehk=15Jii4VxOGT82UWsNZKAfEKkyzlZMJwai13deRKzcFM%3d&risl=&pid=ImgRaw&r=0";
+      : "http://localhost:8080/uploads/courses/images/1733382611231-882417740-thu%20vien.jpg";
     const fullDocumentUrls = course.documents
       ? course.documents.map(
           (doc) =>
@@ -132,7 +130,9 @@ const deleteCourse = async (req, res) => {
 const addDocuments = async (req, res) => {
   try {
     const { courseId } = req.params;
-    const documents = req.files.map((file) => file.filename);
+    const documents = req.files.map((file) =>
+      decodeURIComponent(file.filename)
+    );
 
     // Gọi service để thêm tài liệu vào khóa học
     const updatedCourse = await courseService.addDocumentsToCourse(

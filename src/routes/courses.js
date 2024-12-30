@@ -16,7 +16,7 @@ const authorizer = require("../middleware/authorization");
 courseRouter.post(
   "/create",
   authentication,
-  authorizer(["admin"]),
+  authorizer(["admin", "lecturer"]),
   uploadImage.single("image"),
   createCourse
 );
@@ -28,7 +28,7 @@ courseRouter.get("/:id", getCourseById);
 courseRouter.put(
   "/:id",
   authentication,
-  authorizer(["admin"]),
+  authorizer(["admin", "lecturer"]),
   uploadImage.single("image"),
   updateCourse
 );
@@ -36,14 +36,14 @@ courseRouter.put(
 courseRouter.delete(
   "/:id",
   authentication,
-  authorizer(["admin"]),
+  authorizer(["admin", "lecturer"]),
   deleteCourse
 );
 //thêm tài liệu vào khóa học
 courseRouter.post(
   "/documents/:courseId",
   authentication,
-  authorizer(["lecturer"]),
+  authorizer(["lecturer", "admin"]),
   uploadDocument.array("documents"),
   addDocuments
 );

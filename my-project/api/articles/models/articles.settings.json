@@ -1,0 +1,32 @@
+{
+  "kind": "collectionType",
+  "collectionName": "articles",
+  "info": {
+    "name": "Articles",
+    "description": ""
+  },
+  "options": {
+    "increments": true,
+    "timestamps": true,
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": false
+    },
+    "content": {
+      "type": "richtext",
+      "required": true
+    },
+    "menu": {
+      "via": "articles",
+      "model": "menu"
+    },
+    "submenus": {
+      "via": "articles",
+      "collection": "submenu"
+    }
+  }
+}

@@ -18,7 +18,8 @@ const createUserService = async (
   phoneNumber,
   dateOfBirth,
   studentClass,
-  description
+  description,
+  MSV
 ) => {
   try {
     console.log("Dữ liệu đầu vào:", {
@@ -33,7 +34,9 @@ const createUserService = async (
       dateOfBirth,
       studentClass,
       description,
+      MSV,
     });
+
     //hash user password
     const hashPassword = await bcrypt.hash(password, saltRounds);
 
@@ -50,6 +53,7 @@ const createUserService = async (
       dateOfBirth: dateOfBirth,
       studentClass: studentClass,
       description: description,
+      MSV: MSV,
     });
     result.profileImage = `${process.env.BASE_URL}/${result.profileImage}`;
     console.log(result.profileImage);
@@ -64,6 +68,15 @@ const loginService = async (email, password) => {
   try {
     // fetch user by email
     const user = await User.findOne({ email: email });
+    if (!user) {
+      return { EC: 4, EM: "Tài khoản không tồn tại" };
+    }
+
+    // Kiểm tra trạng thái tài khoản (isActive)
+    if (!user.isActive) {
+      return { EC: 5, EM: "Tài khoản của bạn đã bị khóa" };
+    }
+
     if (user) {
       // compare password
       const isMatchPassword = await bcrypt.compare(password, user.password);
@@ -85,15 +98,22 @@ const loginService = async (email, password) => {
           dateOfBirth: user.dateOfBirth,
           studentClass: user.studentClass,
           description: user.description,
+          MSV: user.MSV,
         };
         const access_token = jwt.sign(payload, process.env.JWT_SECRET, {
           expiresIn: process.env.JWT_EXPIRE,
         });
-
+        const refresh_token = jwt.sign(
+          payload,
+          process.env.JWT_REFRESH_SECRET,
+          {
+            expiresIn: process.env.JWT_REFRESH_EXPIRE, // Thời gian sống của refresh token (ví dụ: 7 ngày)
+          }
+        );
         return {
           EC: 0,
-          EM: "OK",
           access_token,
+          refresh_token,
           user: {
             email: user.email,
             role: user.role,
@@ -105,6 +125,7 @@ const loginService = async (email, password) => {
             dateOfBirth: user.dateOfBirth,
             studentClass: user.studentClass,
             description: user.description,
+            MSV: user.MSV,
           },
         };
       }
@@ -122,7 +143,7 @@ const loginService = async (email, password) => {
 
 const getUserService = async () => {
   try {
-    let result = await User.find({});
+    let result = await User.find({}).select("-password");
     return result;
   } catch (error) {
     console.log(error);
