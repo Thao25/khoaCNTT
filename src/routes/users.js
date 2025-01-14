@@ -7,6 +7,7 @@ const {
   updateUser,
   changePassword,
   deleteUser,
+  update,
   updateUserStatus,
 } = require("../controllers/userController");
 const authentication = require("../middleware/authentication");
@@ -40,11 +41,12 @@ userRouter.put(
 );
 //cập nhật thông tin cá nhân
 userRouter.put(
-  "/:id",
+  "/:email",
   authentication,
   uploadProfileImage.single("profileImage"),
-  updateUser
+  update
 );
+
 // Đổi mật khẩu
 userRouter.post("/password", authentication, changePassword);
 // xóa người dùng

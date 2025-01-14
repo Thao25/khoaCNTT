@@ -6,6 +6,7 @@ const {
   updateUserService,
   changePasswordService,
   deleteUserService,
+  updateService,
 } = require("../services/userService");
 const User = require("../models/user");
 const createUser = async (req, res) => {
@@ -170,6 +171,73 @@ const updateUser = async (req, res) => {
       .json({ message: "Lỗi trong quá trình cập nhật người dùng", error });
   }
 };
+const update = async (req, res) => {
+  const email = req.params.email;
+  const {
+    fullName,
+    address,
+    phoneNumber,
+    gender,
+    role,
+    dateOfBirth,
+    studentClass,
+    description,
+    MSV,
+  } = req.body;
+
+  // Kiểm tra xem có file ảnh không, nếu không thì giữ lại ảnh cũ
+  const imagePath = req.file ? req.file.path.replace(/\\/g, "/") : null;
+
+  try {
+    // Lấy người dùng hiện tại từ database để lấy ảnh cũ nếu không có ảnh mới
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "Không tìm thấy người dùng" });
+    }
+
+    // Nếu không có ảnh mới thì giữ ảnh cũ
+    const updatedImagePath = imagePath ? imagePath : User.profileImage;
+
+    // Cập nhật thông tin người dùng
+    const updatedUser = await updateService(email, {
+      fullName,
+      profileImage: updatedImagePath,
+      address,
+      phoneNumber,
+      gender,
+      role,
+      dateOfBirth,
+      studentClass,
+      description,
+      MSV,
+    });
+
+    // Tạo URL đầy đủ cho ảnh
+    const fullImageUrl = updatedImagePath
+      ? `${req.protocol}://${req.get("host")}/${updatedImagePath}`
+      : null;
+
+    // Kiểm tra nếu cập nhật không thành công
+    if (!updatedUser) {
+      return res.status(404).json({ message: "Người dùng chưa được cập nhật" });
+    }
+
+    // Trả về kết quả
+    return res.status(200).json({
+      message: "Cập nhật người dùng thành công",
+      data: {
+        ...updatedUser.toObject(),
+        profileImage: fullImageUrl,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ message: "Lỗi trong quá trình cập nhật người dùng", error });
+  }
+};
 
 const changePassword = async (req, res) => {
   const { oldPassword, newPassword } = req.body;
@@ -177,9 +245,15 @@ const changePassword = async (req, res) => {
   try {
     // Gọi service để xử lý logic đổi mật khẩu
     const result = await changePasswordService(email, oldPassword, newPassword);
+    if (result.EC !== 0) {
+      return res.status(400).json({
+        EC: result.EC,
+        EM: result.EM,
+      });
+    }
 
     // Trả về kết quả từ service
-    return res.status(200).json(result);
+    return res.status(200).json({ success: true, message: result.EM });
   } catch (error) {
     console.error("Error in controller:", error);
     return res.status(500).json({
@@ -243,4 +317,5 @@ module.exports = {
   changePassword,
   deleteUser,
   updateUserStatus,
+  update,
 };

@@ -177,6 +177,21 @@ const updateUserService = async (id, userData) => {
     return null;
   }
 };
+const updateService = async (email, userData) => {
+  try {
+    // Cập nhật thông tin người dùng, không thay đổi mật khẩu
+    const result = await User.findOneAndUpdate({ email }, userData, {
+      new: true,
+    });
+    if (result && result.profileImage) {
+      result.profileImage = `${process.env.BASE_URL}/${result.profileImage}`;
+    }
+    return result;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+};
 
 const changePasswordService = async (email, oldPassword, newPassword) => {
   try {
@@ -205,6 +220,12 @@ const changePasswordService = async (email, oldPassword, newPassword) => {
         EM: "Mật khẩu cũ không đúng.",
       };
     }
+    if (newPassword.length < 6) {
+      return {
+        EC: 5,
+        EM: "Mật khẩu mới phải có ít nhất 6 ký tự.",
+      };
+    }
 
     // Mã hóa mật khẩu mới
     const salt = await bcrypt.genSalt(10);
@@ -221,7 +242,7 @@ const changePasswordService = async (email, oldPassword, newPassword) => {
   } catch (error) {
     console.error("Error changing password in service:", error);
     return {
-      EC: 4,
+      EC: 6,
       EM: "Đã có lỗi xảy ra trong quá trình đổi mật khẩu.",
     };
   }
@@ -259,4 +280,5 @@ module.exports = {
   updateUserService,
   changePasswordService,
   deleteUserService,
+  updateService,
 };
