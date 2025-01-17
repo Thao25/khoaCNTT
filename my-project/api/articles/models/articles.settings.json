@@ -39,6 +39,10 @@
       "plugin": "upload",
       "required": false,
       "pluginOptions": {}
+    },
+    "isFeatured": {
+      "type": "boolean",
+      "default": false
     }
   }
 }
